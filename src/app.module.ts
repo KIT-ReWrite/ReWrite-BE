@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 
 import { AuthModule } from './auth/auth.module';
-import { UserModule } from './users/users.module';
+import { UsersModule } from './users/users.module';
 // 앞으로 classes, assignments 등도 추가 예정
 
 @Module({
@@ -15,7 +15,7 @@ import { UserModule } from './users/users.module';
     PrismaModule,
 
     AuthModule,
-    UserModule,
+    UsersModule,
     // ClassesModule,
     // AssignmentsModule,
     // SubmissionsModule,
