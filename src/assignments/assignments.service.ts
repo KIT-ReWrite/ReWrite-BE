@@ -117,7 +117,9 @@ export class AssignmentsService {
         : Math.round((submitted_count / total_students) * 100);
 
     // 학생인 경우 본인 제출 상태 포함
-    let my_submission = null;
+    let my_submission: Awaited<
+      ReturnType<typeof this.prisma.submission.findFirst>
+    > = null;
     if (user.role === 'student') {
       my_submission = await this.prisma.submission.findFirst({
         where: { assignment_id: assignmentId, student_id: user.id },
