@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { ClassesModule } from './classes/classes.module';
 // 앞으로 classes, assignments 등도 추가 예정
 
 @Module({
@@ -16,7 +17,7 @@ import { UsersModule } from './users/users.module';
 
     AuthModule,
     UsersModule,
-    // ClassesModule,
+    ClassesModule,
     // AssignmentsModule,
     // SubmissionsModule,
     // FeedbackModule,
