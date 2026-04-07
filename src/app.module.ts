@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ClassesModule } from './classes/classes.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { SubmissionsModule } from './submissions/submissions.module';
 // 앞으로 classes, assignments 등도 추가 예정
 
 @Module({
@@ -20,7 +21,7 @@ import { AssignmentsModule } from './assignments/assignments.module';
     UsersModule,
     ClassesModule,
     AssignmentsModule,
-    // SubmissionsModule,
+    SubmissionsModule,
     // FeedbackModule,
     // MetricsModule,
     // DashboardModule,
