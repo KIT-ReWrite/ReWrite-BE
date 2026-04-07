@@ -1,0 +1,142 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             BigInt @id @default(autoincrement())
+  role           UserRole
+  username       String  @unique
+  password       String
+  name           String
+  school         String
+  student_number String?
+  subject        String?
+  profile_image  String?
+  created_at     DateTime @default(now())
+
+  classes        Class[]      @relation("TeacherClasses")
+  classStudents  ClassStudent[]
+  submissions    Submission[]
+  metrics        StudentMetrics?
+  scoreHistory   StudentScoreHistory[]
+}
+
+enum UserRole {
+  student
+  teacher
+}
+
+model Class {
+  id            BigInt @id @default(autoincrement())
+  name          String
+  teacher_id    BigInt
+  invite_code   String @unique
+  created_at    DateTime @default(now())
+
+  teacher       User   @relation("TeacherClasses", fields: [teacher_id], references: [id])
+  students      ClassStudent[]
+  assignments   Assignment[]
+}
+
+model ClassStudent {
+  id         BigInt @id @default(autoincrement())
+  class_id   BigInt
+  student_id BigInt
+  joined_at  DateTime @default(now())
+
+  class   Class @relation(fields: [class_id], references: [id])
+  student User  @relation(fields: [student_id], references: [id])
+}
+
+model Assignment {
+  id          BigInt @id @default(autoincrement())
+  class_id    BigInt
+  title       String
+  description String
+  due_date    DateTime
+  created_at  DateTime @default(now())
+
+  class        Class        @relation(fields: [class_id], references: [id])
+  submissions  Submission[]
+  scoreHistory StudentScoreHistory[]
+}
+
+model Submission {
+  id            BigInt @id @default(autoincrement())
+  assignment_id BigInt
+  student_id    BigInt
+  text_content  String
+  status        SubmissionStatus @default(not_submitted)
+  submitted_at  DateTime?
+
+  assignment  Assignment @relation(fields: [assignment_id], references: [id])
+  student     User       @relation(fields: [student_id], references: [id])
+  images      SubmissionImages[]
+  aiFeedback  AIFeedback?
+  teacherFb   TeacherFeedback?
+}
+
+enum SubmissionStatus {
+  not_submitted
+  submitted
+  ai_done
+  graded
+}
+
+model SubmissionImages {
+  id             BigInt @id @default(autoincrement())
+  submission_id  BigInt
+  image_url      String
+  created_at     DateTime @default(now())
+
+  submission Submission @relation(fields: [submission_id], references: [id])
+}
+
+model AIFeedback {
+  id                     BigInt @id @default(autoincrement())
+  submission_id          BigInt @unique
+  summary                String
+  detail_analysis        Json
+  improvement_suggestions Json
+  created_at             DateTime @default(now())
+
+  submission Submission @relation(fields: [submission_id], references: [id])
+}
+
+model TeacherFeedback {
+  id            BigInt @id @default(autoincrement())
+  submission_id BigInt @unique
+  score         Int
+  feedback      String
+  created_at    DateTime @default(now())
+
+  submission Submission @relation(fields: [submission_id], references: [id])
+}
+
+model StudentMetrics {
+  id            BigInt @id @default(autoincrement())
+  student_id    BigInt @unique
+  logical       Int
+  structure     Int
+  grammar       Int
+  creativity    Int
+  understanding Int
+  updated_at    DateTime @updatedAt
+
+  student User @relation(fields: [student_id], references: [id])
+}
+
+model StudentScoreHistory {
+  id            BigInt @id @default(autoincrement())
+  student_id    BigInt
+  assignment_id BigInt
+  score         Int
+  created_at    DateTime @default(now())
+
+  student    User       @relation(fields: [student_id], references: [id])
+  assignment Assignment @relation(fields: [assignment_id], references: [id])
+}
