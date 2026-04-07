@@ -9,7 +9,7 @@ import { AssignmentsModule } from './assignments/assignments.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { TeacherFeedbackModule } from './teacher-feedback/teacher-feedback.module';
 import { StudentMetricsModule } from './student-metrics/student-metrics.module';
-// 앞으로 classes, assignments 등도 추가 예정
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { StudentMetricsModule } from './student-metrics/student-metrics.module';
     SubmissionsModule,
     TeacherFeedbackModule,
     StudentMetricsModule,
-    // DashboardModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}
