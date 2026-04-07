@@ -10,6 +10,7 @@ import { SubmissionsModule } from './submissions/submissions.module';
 import { TeacherFeedbackModule } from './teacher-feedback/teacher-feedback.module';
 import { StudentMetricsModule } from './student-metrics/student-metrics.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AIFeedbackModule } from './ai-feedback/ai-feedback.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     TeacherFeedbackModule,
     StudentMetricsModule,
     DashboardModule,
+    AIFeedbackModule,
   ],
 })
 export class AppModule {}
