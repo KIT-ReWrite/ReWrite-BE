@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsEnum(['student', 'teacher'])
@@ -8,6 +8,7 @@ export class RegisterDto {
   username!: string;
 
   @IsString()
+  @MinLength(6)
   password!: string;
 
   @IsString()

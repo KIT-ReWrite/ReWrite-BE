@@ -19,6 +19,6 @@ export class AuthController {
 
   @Post('logout')
   logout() {
-    return { message: 'logged out' };
+    return { message: '로그아웃 되었습니다.' };
   }
 }
