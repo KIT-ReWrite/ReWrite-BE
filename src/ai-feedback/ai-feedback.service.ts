@@ -29,18 +29,9 @@ export class AIFeedbackService {
     return feedback;
   }
 
-  // AI 분석 실행 + 저장
   async createAIFeedback(submissionId: number, user: any) {
     const submission = await this.getSubmissionOrThrow(submissionId, user);
 
-    // 이미 분석된 경우
-    const existing = await this.prisma.aIFeedback.findUnique({
-      where: { submission_id: submissionId },
-    });
-    if (existing)
-      throw new ConflictException('이미 AI 분석이 완료된 제출물입니다.');
-
-    // 제출물 텍스트가 비어있는 경우
     if (!submission.text_content?.trim()) {
       throw new ForbiddenException('제출물 내용이 없어 분석할 수 없습니다.');
     }
@@ -52,9 +43,14 @@ export class AIFeedbackService {
       submission.text_content,
     );
 
-    // AI 피드백 저장
-    const feedback = await this.prisma.aIFeedback.create({
-      data: {
+    const feedback = await this.prisma.aIFeedback.upsert({
+      where: { submission_id: submissionId },
+      update: {
+        summary: result.summary,
+        detail_analysis: result.detail_analysis,
+        improvement_suggestions: result.improvement_suggestions,
+      },
+      create: {
         submission_id: submissionId,
         summary: result.summary,
         detail_analysis: result.detail_analysis,
@@ -68,7 +64,7 @@ export class AIFeedbackService {
       data: { status: 'ai_done' },
     });
 
-    // 역량 점수 자동 업데이트 (upsert)
+    // ✅ 역량 점수 AI가 자동 판단해서 upsert
     const da = result.detail_analysis;
     await this.prisma.studentMetrics.upsert({
       where: { student_id: submission.student_id },

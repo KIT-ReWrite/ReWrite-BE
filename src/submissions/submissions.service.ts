@@ -6,12 +6,15 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSubmissionDto } from './dto/create-submission.dto';
 import { UpdateSubmissionDto } from './dto/update-submission.dto';
+import { AIFeedbackService } from '../ai-feedback/ai-feedback.service';
 
 @Injectable()
 export class SubmissionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private aiFeedbackService: AIFeedbackService,
+  ) {}
 
-  // 교사용 제출물 리스트 (status 필터)
   async getSubmissions(assignmentId: number, user: any, status?: string) {
     if (user.role !== 'teacher') {
       throw new ForbiddenException('교사만 제출물 목록을 조회할 수 있습니다.');
@@ -22,7 +25,7 @@ export class SubmissionsService {
       include: { class: true },
     });
     if (!assignment) throw new NotFoundException('과제를 찾을 수 없습니다.');
-    if (assignment.class.teacher_id !== user.id) {
+    if (assignment.class.teacher_id.toString() !== user.id.toString()) {
       throw new ForbiddenException('본인의 학급 과제만 조회할 수 있습니다.');
     }
 
@@ -46,7 +49,6 @@ export class SubmissionsService {
     });
   }
 
-  // 제출물 상세 (이미지 + 피드백 포함)
   async getSubmissionById(submissionId: number, user: any) {
     const submission = await this.prisma.submission.findUnique({
       where: { id: submissionId },
@@ -60,24 +62,21 @@ export class SubmissionsService {
     });
     if (!submission) throw new NotFoundException('제출물을 찾을 수 없습니다.');
 
-    // 교사는 본인 학급 과제 제출물만, 학생은 본인 제출물만
     if (user.role === 'teacher') {
-      if (submission.assignment.class.teacher_id !== user.id) {
+      if (
+        submission.assignment.class.teacher_id.toString() !== user.id.toString()
+      ) {
         throw new ForbiddenException('접근 권한이 없습니다.');
       }
     } else {
-      if (submission.student_id !== user.id) {
+      if (submission.student_id.toString() !== user.id.toString()) {
         throw new ForbiddenException('본인의 제출물만 조회할 수 있습니다.');
       }
     }
 
-    return {
-      ...submission,
-      student: { ...submission.student, id: submission.student.id.toString() },
-    };
+    return submission;
   }
 
-  // 과제 제출
   async createSubmission(
     assignmentId: number,
     user: any,
@@ -93,7 +92,6 @@ export class SubmissionsService {
     });
     if (!assignment) throw new NotFoundException('과제를 찾을 수 없습니다.');
 
-    // 해당 학급 수강 여부 확인
     const enrolled = await this.prisma.classStudent.findUnique({
       where: {
         class_id_student_id: {
@@ -105,7 +103,7 @@ export class SubmissionsService {
     if (!enrolled)
       throw new ForbiddenException('해당 학급에 속해있지 않습니다.');
 
-    // 이미 제출한 경우 기존 제출물 업데이트
+    // 이미 제출한 경우 수정으로 전환
     const existing = await this.prisma.submission.findFirst({
       where: { assignment_id: assignmentId, student_id: user.id },
     });
@@ -124,10 +122,12 @@ export class SubmissionsService {
       },
     });
 
-    // 이미지 저장
     if (files?.length) {
       await this.saveImages(submission.id, files);
     }
+
+    // ✅ AI 분석 백그라운드 자동 실행 (응답 블로킹 안 함)
+    this.runAIAnalysis(submission.id, user);
 
     return this.prisma.submission.findUnique({
       where: { id: submission.id },
@@ -135,7 +135,6 @@ export class SubmissionsService {
     });
   }
 
-  // 제출 수정
   async updateSubmission(
     submissionId: number,
     user: any,
@@ -146,7 +145,7 @@ export class SubmissionsService {
       where: { id: submissionId },
     });
     if (!submission) throw new NotFoundException('제출물을 찾을 수 없습니다.');
-    if (submission.student_id !== user.id) {
+    if (submission.student_id.toString() !== user.id.toString()) {
       throw new ForbiddenException('본인의 제출물만 수정할 수 있습니다.');
     }
 
@@ -159,10 +158,12 @@ export class SubmissionsService {
       },
     });
 
-    // 새 이미지가 있으면 추가
     if (files?.length) {
       await this.saveImages(submissionId, files);
     }
+
+    // ✅ 수정 제출 시에도 AI 재분석 실행
+    this.runAIAnalysis(submissionId, user);
 
     return this.prisma.submission.findUnique({
       where: { id: updated.id },
@@ -170,14 +171,13 @@ export class SubmissionsService {
     });
   }
 
-  // 제출 이미지 삭제
   async deleteSubmissionImage(imageId: number, user: any) {
     const image = await this.prisma.submissionImage.findUnique({
       where: { id: imageId },
       include: { submission: true },
     });
     if (!image) throw new NotFoundException('이미지를 찾을 수 없습니다.');
-    if (image.submission.student_id !== user.id) {
+    if (image.submission.student_id.toString() !== user.id.toString()) {
       throw new ForbiddenException(
         '본인의 제출물 이미지만 삭제할 수 있습니다.',
       );
@@ -195,5 +195,15 @@ export class SubmissionsService {
       image_url: `/uploads/submissions/${file.filename}`,
     }));
     await this.prisma.submissionImage.createMany({ data });
+  }
+
+  // ✅ AI 분석 백그라운드 실행 (await 안 걸어서 응답 먼저 반환)
+  private runAIAnalysis(submissionId: number, user: any) {
+    this.aiFeedbackService.createAIFeedback(submissionId, user).catch((err) => {
+      console.error(
+        `[AI 분석 실패] submissionId: ${submissionId}`,
+        err.message,
+      );
+    });
   }
 }
