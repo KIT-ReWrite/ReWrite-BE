@@ -19,7 +19,6 @@ import { AIFeedbackModule } from './ai-feedback/ai-feedback.module';
     }),
 
     PrismaModule,
-
     AuthModule,
     UsersModule,
     ClassesModule,
