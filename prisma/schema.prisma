@@ -36,6 +36,8 @@ model User {
   submissions     Submission[]
   metrics         StudentMetrics?
   score_histories StudentScoreHistory[]
+
+  refresh_token  String?   @db.Text
 }
 
 model Class {
