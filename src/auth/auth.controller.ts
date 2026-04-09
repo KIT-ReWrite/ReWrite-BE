@@ -1,7 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { JwtGuard } from './jwt.guard';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -17,8 +20,14 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Post('refresh')
+  refresh(@Body() dto: RefreshDto) {
+    return this.authService.refresh(dto.refresh_token);
+  }
+
+  @UseGuards(JwtGuard)
   @Post('logout')
-  logout() {
-    return { message: '로그아웃 되었습니다.' };
+  logout(@Req() req: Request & { user: { id: bigint } }) {
+    return this.authService.logout(req.user.id.toString());
   }
 }
