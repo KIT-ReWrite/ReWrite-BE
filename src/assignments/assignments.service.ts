@@ -50,14 +50,23 @@ export class AssignmentsService {
       return 0;
     });
 
-    if (user.role === 'student' && status) {
+    if (user.role === 'student') {
       const submissionMap = await this.getSubmissionStatusMap(
         user.id,
         sorted.map((a) => a.id),
       );
-      return sorted.filter(
-        (a) => (submissionMap[a.id] ?? 'not_submitted') === status,
-      );
+
+      // status 필터링도 여기서 처리
+      let result = sorted.map((a) => ({
+        ...a,
+        my_status: submissionMap[a.id] ?? 'not_submitted',
+      }));
+
+      if (status) {
+        result = result.filter((a) => a.my_status === status);
+      }
+
+      return result;
     }
 
     return sorted;
