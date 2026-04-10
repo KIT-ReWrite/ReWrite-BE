@@ -22,10 +22,20 @@ export class ClassesService {
 
   async getClasses(user: any) {
     if (user.role === 'teacher') {
-      return this.prisma.class.findMany({
+      const classes = await this.prisma.class.findMany({
         where: { teacher_id: user.id },
         orderBy: { created_at: 'desc' },
       });
+
+      return Promise.all(
+        classes.map(async (cls) => {
+          const [student_count, assignment_count] = await Promise.all([
+            this.prisma.classStudent.count({ where: { class_id: cls.id } }),
+            this.prisma.assignment.count({ where: { class_id: cls.id } }),
+          ]);
+          return { ...cls, student_count, assignment_count };
+        }),
+      );
     }
 
     const classStudents = await this.prisma.classStudent.findMany({
@@ -33,7 +43,16 @@ export class ClassesService {
       include: { class: true },
       orderBy: { joined_at: 'desc' },
     });
-    return classStudents.map((cs) => cs.class);
+
+    return Promise.all(
+      classStudents.map(async (cs) => {
+        const [student_count, assignment_count] = await Promise.all([
+          this.prisma.classStudent.count({ where: { class_id: cs.class_id } }),
+          this.prisma.assignment.count({ where: { class_id: cs.class_id } }),
+        ]);
+        return { ...cs.class, student_count, assignment_count };
+      }),
+    );
   }
 
   async createClass(user: any, dto: CreateClassDto) {
