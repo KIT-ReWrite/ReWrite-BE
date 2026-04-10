@@ -28,6 +28,8 @@ export class GroqService {
   ): Promise<AIAnalysisResult> {
     const prompt = `당신은 학생 과제를 분석하는 교육 AI입니다.
 아래 과제와 학생 제출물을 분석하고, 반드시 JSON 형식으로만 응답하세요.
+또한 과제에 대한 답변은 한국어로만 답 하시고 학생이 이해하기 어려운 한자 혹은 외국어는 사용하지 마세요.
+해당 답변은 학생에게 바로 전달 되므로, 말투를 학생에게 하는것을 기준으로 하세요.
 
 [과제 제목]
 ${assignmentTitle}
