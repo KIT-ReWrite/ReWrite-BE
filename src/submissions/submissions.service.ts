@@ -45,7 +45,7 @@ export class SubmissionsService {
         },
         images: true,
       },
-      orderBy: { submitted_at: 'desc' },
+      orderBy: [{ status: 'asc' }, { created_at: 'desc' }],
     });
   }
 
