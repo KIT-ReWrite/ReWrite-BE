@@ -84,6 +84,7 @@ model Submission {
   text_content  String           @db.LongText
   status        SubmissionStatus @default(not_submitted)
   submitted_at  DateTime?
+  created_at     DateTime @default(now())
 
   assignment      Assignment       @relation(fields: [assignment_id], references: [id])
   student         User             @relation(fields: [student_id], references: [id])
