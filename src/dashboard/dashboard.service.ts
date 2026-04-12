@@ -96,11 +96,21 @@ export class DashboardService {
           profile_image: sub.student.profile_image,
           pending_count: 0,
           latest_assignment: sub.assignment.title,
-          assignment_id: sub.assignment.id,
+          assignment_id: sub.assignment.id, // ✅ 추가
           class_name: sub.assignment.class.name,
         });
       }
       studentMap.get(key).pending_count += 1;
     }
+
+    const ai_attention_students = Array.from(studentMap.values());
+
+    return {
+      class_count: classes.length,
+      student_count,
+      due_today_count,
+      submission_rate_by_class,
+      ai_attention_students,
+    };
   }
 }
