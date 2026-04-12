@@ -80,13 +80,12 @@ export class DashboardService {
       include: {
         student: { select: { id: true, name: true, profile_image: true } },
         assignment: {
-          select: { title: true, class: { select: { name: true } } },
+          select: { title: true, id: true, class: { select: { name: true } } },
         },
       },
       orderBy: { submitted_at: 'desc' },
     });
 
-    // 학생별로 그룹핑 (중복 제거)
     const studentMap = new Map<string, any>();
     for (const sub of pendingSubmissions) {
       const key = sub.student_id.toString();
@@ -97,19 +96,11 @@ export class DashboardService {
           profile_image: sub.student.profile_image,
           pending_count: 0,
           latest_assignment: sub.assignment.title,
+          assignment_id: sub.assignment.id,
           class_name: sub.assignment.class.name,
         });
       }
       studentMap.get(key).pending_count += 1;
     }
-    const ai_attention_students = Array.from(studentMap.values());
-
-    return {
-      class_count: classes.length,
-      student_count,
-      due_today_count,
-      submission_rate_by_class,
-      ai_attention_students,
-    };
   }
 }
